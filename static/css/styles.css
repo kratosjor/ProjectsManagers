@@ -1,0 +1,579 @@
+/* Estilos Generales */
+body {
+    background-color: #f4f4f4;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Asegura que el body ocupe todo el alto de la pantalla */
+}
+
+/* Barra lateral */
+.sidebar {
+    height: 100%;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #f4f4f4;
+    padding-top: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h3 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+.sidebar a {
+    padding: 10px 15px;
+    font-size: 18px;
+    color: #333;
+    display: block;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.sidebar a:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Contenido Principal */
+.main-content {
+    margin-left: 250px;
+    padding: 20px;
+    flex-grow: 1; /* Permite que el contenido principal ocupe el espacio disponible */
+}
+
+.navbar {
+    background-color: #007bff;
+    margin-bottom: 20px;
+}
+
+.navbar .navbar-brand {
+    color: white;
+}
+
+.navbar-nav .nav-link {
+    color: white;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #f0f0f0;
+}
+
+/* Tarjetas de tareas */
+.task-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.task-card h4 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.task-card p {
+    font-size: 1rem;
+    color: #666;
+}
+
+/* Estilo de footer */
+.footer {
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    margin-top: auto; /* Esto asegura que el footer esté al final */
+    width: 100%;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/************************************************************/
+/* Estilo del contenedor del formulario */
+.form-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+/* Estilos del título */
+h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Estilo de los campos del formulario */
+form input, form textarea, form select {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+form input:focus, form textarea:focus, form select:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Botón de submit */
+button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    font-size: 1.1rem;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos del formulario en dispositivos pequeños */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 20px;
+        margin: 10px;
+    }
+}
+/****************************************************/
+/* Contenedor de la tabla de detalles del proyecto */
+.table-container {
+    width: calc(100% - 250px);  /* Resta el ancho del sidebar */
+    margin-left: 250px;  /* Alinea con el contenido principal */
+    padding: 20px;
+    display: flex;
+    justify-content: center; /* Centra la tabla dentro de la página */
+}
+
+table {
+    width: 100%;  /* La tabla ocupa el 100% del ancho disponible */
+    max-width: 1200px;  /* Establece un máximo de ancho para evitar que se estire demasiado */
+    border-collapse: collapse;
+    margin: 0 auto;  /* Centra la tabla */
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f1f1f1;
+    color: #333;
+    font-weight: 600;
+}
+
+table td {
+    color: #555;
+}
+
+/* Estilo para las filas del proyecto */
+table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Botón de agregar tarea */
+a {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+a:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo para las tareas asociadas */
+h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 20px;
+}
+
+/* Estilo de los enlaces de editar y eliminar */
+a[href*="editar_tarea"], a[href*="eliminar_tarea"] {
+    color: #007bff;
+    margin-right: 10px;
+}
+
+a[href*="editar_tarea"]:hover, a[href*="eliminar_tarea"]:hover {
+    color: #0056b3;
+}
+
+/* Para cuando no haya tareas asociadas */
+p {
+    font-size: 1rem;
+    color: #888;
+    font-style: italic;
+}
+
+/* Estilos generales */
+h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    color: #007bff;
+}
+
+/* Estilo del contenedor de la página */
+body {
+    background-color: #f9f9f9;
+}
+/*******************************/
+/* Estilo para el contenedor de la tabla */
+.main-content-lista {
+    margin-left: 0;
+    padding: 30px;
+    background-color: #f4f4f4;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;  /* Centra la tabla horizontalmente */
+}
+
+/* Estilo para la tabla de proyectos */
+.project-table {
+    width: 90%;  /* O un valor de porcentaje adecuado */
+    max-width: 1200px;  /* Limita el ancho máximo de la tabla */
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.project-table th, .project-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.project-table th {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: 600;
+}
+
+.project-table td {
+    color: #555;
+}
+
+/* Estilo para las filas de la tabla */
+.project-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Estilo para los botones de acción */
+.action-button {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+    margin: 5px;
+}
+
+.action-button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos para la barra de navegación */
+.navbar {
+    background-color: #007bff;
+    padding: 10px 20px;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+.navbar a:hover {
+    color: #f1f1f1;
+}
+/****MENSAJE A USUARIO****/
+.mensaje-usuario {
+    background-color: #f3f3f3; /* Color de fondo claro */
+    color: #333; /* Texto oscuro */
+    padding: 12px 16px;
+    border-radius: 8px; /* Bordes redondeados */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px; /* Ancho máximo */
+    margin: 10px auto; /* Centrar */
+}
+
+/* Ícono opcional */
+.mensaje-usuario i {
+    color: #0078D4; /* Azul de Microsoft */
+    font-size: 18px;
+}
+/* General */
+.comments-section {
+    background-color: #f4f5f7; /* Fondo gris suave para la sección */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.comments-section h3 {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.comments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+/* Estilo para cada comentario */
+.comment {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.comment p {
+    margin: 5px 0;
+}
+
+.comment strong {
+    font-weight: 600;
+    color: #0078d4; /* Color similar a los enlaces en Microsoft To-Do */
+}
+
+/* Estilo de la fecha */
+.comment p:nth-child(2) {
+    font-size: 0.9em;
+    color: #777;
+}
+
+/* Botón de eliminar */
+.comment .btn-danger {
+    background-color: #e60000;
+    border-color: #e60000;
+    color: white;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.comment .btn-danger:hover {
+    background-color: #cc0000;
+    border-color: #cc0000;
+}
+
+/* Estilo para el formulario de comentario */
+#comentario-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#comentario-textarea {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    resize: vertical;
+    min-height: 100px;
+    max-height: 200px;
+    transition: all 0.3s;
+    outline: none;
+}
+
+#comentario-textarea:focus {
+    border-color: #0078d4; /* Similar al color de enlace de Microsoft To-Do */
+    box-shadow: 0 0 5px rgba(0, 120, 212, 0.5);
+}
+
+/* Estilo para las sugerencias de menciones */
+#menciones-sugerencias {
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.sugerencia {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #0078d4;
+    font-size: 1em;
+}
+
+.sugerencia:hover {
+    background-color: #f4f5f7;
+}
+
+.sugerencia:active {
+    background-color: #e1e1e1;
+}
+
+/* Estilo para el botón de comentar */
+button[type="submit"] {
+    background-color: #0078d4;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+    background-color: #005a8a;
+}
+
+button[type="submit"]:active {
+    background-color: #003c59;
+}
+
+#comentario-form p {
+    text-align: center;
+    font-size: 0.9em;
+    color: #333;
+}
+/* Estilo para resaltar el correo electrónico dentro del comentario */
+.email-highlight {
+    color: #ff6347; /* Color rojo para resaltar el correo */
+    font-weight: bold; /* Poner en negrita */
+    font-style: italic; /* Estilo en cursiva */
+}
+/*******COMENTARIOS HOME**********/
+/* Estilos para la sección de comentarios en la página principal */
+.comments-home {
+    font-size: 14px;  /* Reducir el tamaño de la fuente */
+    margin-top: 20px;  /* Espacio superior */
+    padding: 10px;  /* Relleno interior para separar el contenido */
+    background-color: #f9f9f9;  /* Fondo gris claro para diferenciarlo */
+    border-radius: 8px;  /* Bordes redondeados */
+}
+
+.comments-home .comment {
+    margin-bottom: 15px;  /* Separación entre comentarios */
+    padding: 8px;  /* Relleno interior de cada comentario */
+    background-color: #fff;  /* Fondo blanco para los comentarios */
+    border: 1px solid #ddd;  /* Borde suave */
+    border-radius: 5px;  /* Bordes redondeados en los comentarios */
+}
+
+.comments-home .comment p {
+    margin: 5px 0;  /* Espaciado entre el nombre, fecha y contenido */
+}
+
+.comments-home .btn-sm {
+    font-size: 12px;  /* Botones más pequeños */
+    padding: 5px 10px;  /* Espaciado más pequeño en botones */
+}
+
+.comments-home .comentario-contenido {
+    font-size: 13px;  /* Reducir el tamaño del texto de los comentarios */
+}
+
+.comments-home h3 {
+    font-size: 18px;  /* Título más pequeño */
+    margin-bottom: 10px;  /* Espacio debajo del título */
+}
+
+.comments-home .comments-list {
+    margin-top: 10px;  /* Separación superior de la lista de comentarios */
+}
+
+/* Estilos para hacer la sección de comentarios más estrecha inicialmente */
+.comentario-expandir {
+    width: 300px;  /* Establecer un ancho fijo */
+    margin-top: 20px;  /* Separación superior */
+    transition: width 0.3s ease;  /* Transición suave cuando se expanda */
+}
+
+.comentario-expandir .comentario-area {
+    display: none;  /* Escondemos la sección de comentario inicialmente */
+    margin-top: 10px;
+}
+
+.comentario-expandir.expanded {
+    width: auto;  /* Ancho más grande cuando se expanda */
+}
+
+.comentario-expandir.expanded .comentario-area {
+    display: block;  /* Mostrar el área para escribir comentario */
+}
+
+.comentario-expandir .btn-primary {
+    width: 100%;  /* Hacer el botón más grande */
+}

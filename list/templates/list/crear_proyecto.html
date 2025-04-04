@@ -1,0 +1,15 @@
+{% extends "template_base.html" %}
+
+{% block body %}
+    <div class="form-container">
+        <h1>Crear Proyecto</h1>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            {{ form.as_p }}
+            
+            <button type="submit">Crear</button>
+        </form>
+    </div>
+{% endblock body %}

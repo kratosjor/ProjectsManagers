@@ -1,0 +1,32 @@
+{% extends "template_base.html" %}
+
+{% block body %}
+<h1>Total de Horas Estimadas por Proyecto</h1>
+<div class="main-content-lista">
+    
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre del Proyecto</th>
+                <th>Total Horas Estimadas</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proyecto_data in proyectos_con_horas %}
+                <tr>
+                    <td>{{ proyecto_data.nombre }}</td>
+                    <td>{{ proyecto_data.total_horas_estimadas }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><strong>Total Horas Estimadas de Todos los Proyectos</strong></td>
+                <td><strong>{{ total_horas_totales }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+{% endblock body %}

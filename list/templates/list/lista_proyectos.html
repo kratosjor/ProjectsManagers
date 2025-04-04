@@ -1,0 +1,45 @@
+{% extends "template_base.html" %}
+
+{% block body %}
+<h1>Lista de Proyectos</h1>
+    <div class="main-content-lista">
+        
+
+        <table class="project-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Creador</th>
+                    <th>Fecha de Inicio</th>
+                    <th>Fecha de Fin</th>
+                    <th>Tareas</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for proyecto in proyectos %}
+                    <tr>
+                        <td><strong>{{ proyecto.nombre }}</strong></td>
+                        <td>{{ proyecto.descripcion }}</td>
+                        <td>{{ proyecto.creador.username }}</td>
+                        <td>{{ proyecto.fecha_inicio }}</td>
+                        <td>{{ proyecto.fecha_fin }}</td>
+                        <td>
+                            {% for tarea in proyecto.tareas.all %}
+                                {{ tarea.tipo_tarea }}{% if not forloop.last %} - {% endif %}
+                            {% empty %}
+                                No hay tareas
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_proyecto' proyecto.id %}" class="action-button">Ver</a>
+                            <a href="{% url 'editar_proyecto' proyecto.id %}" class="action-button">Editar</a>
+                            <a href="{% url 'eliminar_proyecto' proyecto.id %}" class="action-button">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock body %}

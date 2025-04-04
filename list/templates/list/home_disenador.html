@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyectos de {{ disenador.nombre }}</title>
+</head>
+<body>
+    <h1>Proyectos de {{ disenador.nombre }}</h1>
+    
+
+    {% if proyectos %}
+        <ul>
+            {% for proyecto in proyectos %}
+                <li>
+                    <strong>Nombre:</strong> {{ proyecto.nombre }}<br>
+                    <strong>Descripción:</strong> {{ proyecto.descripcion }}<br>
+                    <strong>Estado:</strong> {{ proyecto.get_estado_display }}<br>
+                    <strong>Fecha de inicio:</strong> {{ proyecto.fecha_inicio }}<br>
+                    <strong>Fecha de fin:</strong> {{ proyecto.fecha_fin|default:"No asignada" }}<br>
+                    <a href="{% url 'detalle_proyecto' proyecto.id %}">Ver detalles</a>
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Este diseñador aún no tiene proyectos asignados.</p>
+    {% endif %}
+
+    
+</body>
+</html

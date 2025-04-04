@@ -1,0 +1,164 @@
+{% extends 'template_base.html' %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="task-detail">
+            <h2>{{ tarea.tipo_tarea }} - {{ tarea.proyecto.nombre }}</h2>
+            
+            <div class="task-info">
+                <!-- Información de la tarea aquí... -->
+            </div>
+
+            <div class="task-actions">
+                <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-primary">✏️ Editar</a>
+                <a href="{% url 'eliminar_tarea' tarea.id %}" class="btn btn-danger">🗑️ Eliminar</a>
+            </div>
+
+            <!-- 🔹 SECCIÓN DE COMENTARIOS -->
+                <div class="comments-section">
+                    <h3>📝 Comentarios</h3>
+
+                    <!-- Lista de comentarios -->
+                    <div class="comments-list">
+                        {% for comentario in tarea.comentarios.all %}
+                            <div class="comment">
+                                <p>
+                                    <strong>{{ comentario.usuario.nombre }}</strong> - 
+                                    {{ comentario.fecha_creacion|date:"m-d-y H:i" }}
+                                </p>
+                                <p class="comentario-contenido">{{ comentario.contenido|safe }}</p>
+
+                                <!-- Botón para eliminar el comentario (solo si es el autor o un admin) -->
+                                {% if comentario.usuario == user or user.is_staff %}
+                                <form method="POST" action="{% url 'eliminar_comentario' comentario.id %}" style="display:inline;" onsubmit="return confirmarEliminacion();">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">🗑️ Eliminar</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p>No hay comentarios aún. ¡Sé el primero en comentar! 😊</p>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Formulario para agregar comentario -->
+                    {% if user.is_authenticated %}
+                        <form id="comentario-form" method="POST" action="{% url 'agregar_comentario_tarea' proyect_id=tarea.proyecto.id tarea_id=tarea.id %}">
+                            {% csrf_token %}
+                            <textarea id="comentario-textarea" name="contenido" placeholder="Escribe tu comentario aquí..." required></textarea>
+                            <div id="menciones-sugerencias"></div>
+                            <button type="submit" class="btn btn-success">💬 Comentar</button>
+                        </form>
+                    {% else %}
+                        <p><a href="{% url 'login' %}">Inicia sesión</a> para comentar.</p>
+                    {% endif %}
+                </div>
+
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let textarea = $("#comentario-textarea");
+            let sugerencias = $("#menciones-sugerencias");
+            let usuarios = [];
+        
+            // Obtener lista de usuarios desde el backend
+            $.get("{% url 'obtener_usuarios' %}", function(data) {
+                usuarios = data.usuarios;
+            });
+        
+            // Mostrar sugerencias cuando se detecta "@"
+            textarea.on("input", function() {
+                let texto = textarea.val();
+                let cursorPos = this.selectionStart;
+                let palabraActual = texto.substring(0, cursorPos).match(/@\w*$/);
+        
+                if (palabraActual) {
+                    let filtro = palabraActual[0].substring(1).toLowerCase();
+                    let coincidencias = usuarios.filter(u => u.toLowerCase().startsWith(filtro));
+        
+                    sugerencias.html(coincidencias.map(u => `<div class="sugerencia">@${u}</div>`).join(""));
+                    sugerencias.show();
+                } else {
+                    sugerencias.hide();
+                }
+            });
+        
+            // Insertar la mención seleccionada en el textarea
+            $(document).on("click", ".sugerencia", function() {
+                let seleccion = $(this).text();
+                let texto = textarea.val();
+                let cursorPos = textarea[0].selectionStart;
+                let nuevoTexto = texto.substring(0, cursorPos).replace(/@\w*$/, seleccion) + texto.substring(cursorPos);
+                
+                textarea.val(nuevoTexto);
+                sugerencias.hide();
+                textarea.focus();
+            });
+        
+            // Ocultar sugerencias cuando el usuario hace clic fuera
+            $(document).click(function(e) {
+                if (!$(e.target).closest("#menciones-sugerencias, #comentario-textarea").length) {
+                    sugerencias.hide();
+                }
+            });
+        
+            // Enviar comentario usando AJAX
+            $("#comentario-form").submit(function(e) {
+                e.preventDefault();
+        
+                $.ajax({
+                    url: $(this).attr('action'),
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    headers: { "X-CSRFToken": "{{ csrf_token }}" },  // Protección CSRF
+                    success: function(response) {
+                        if (response.error) {
+                            alert(response.error);
+                            return;
+                        }
+        
+                        let contenidoConMenciones = response.contenido.replace(/@(\w+)/g, '<strong style="color:blue;">@$1</strong>');
+        
+                        $(".comments-list").append(`
+                            <div class="comment">
+                                <p><strong>${response.usuario}</strong> - ${response.fecha_creacion}</p>
+                                <p>${contenidoConMenciones}</p>
+                            </div>
+                        `);
+                        textarea.val("");  // Limpiar el textarea
+                    },
+                    error: function() {
+                        alert("Hubo un error al agregar el comentario.");
+                    }
+                });
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function() {
+            // Función para resaltar correos electrónicos
+            const comentarios = document.querySelectorAll('.comentario-contenido');
+    
+            comentarios.forEach(function(comentario) {
+                // Expresión regular para buscar correos electrónicos
+                const correoRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+    
+                // Reemplazar los correos con un <span> que tenga la clase .email-highlight
+                comentario.innerHTML = comentario.innerHTML.replace(correoRegex, function(match) {
+                    return `<span class="email-highlight">${match}</span>`;
+                });
+            });
+        });
+        
+        // Confirmación de eliminación
+        function confirmarEliminacion() {
+            return confirm("¿Estás seguro de que deseas eliminar este comentario? Esta acción no se puede deshacer.");
+        }
+        
+    </script>
+
+    
+
+{% endblock body %}

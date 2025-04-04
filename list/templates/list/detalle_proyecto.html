@@ -1,0 +1,72 @@
+{% extends "template_base.html" %}
+
+{% block body %}
+    <div class="container my-4">
+        <h1>Detalle del Proyecto: {{ proyecto.nombre }}</h1>
+
+        <table>
+            <tr>
+                <th>Descripción</th>
+                <td>{{ proyecto.descripcion }}</td>
+            </tr>
+            <tr>
+                <th>Estado</th>
+                <td>{{ proyecto.get_estado_display }}</td>
+            </tr>
+            <tr>
+                <th>Fecha de Inicio</th>
+                <td>{{ proyecto.fecha_inicio }}</td>
+            </tr>
+            <tr>
+                <th>Fecha de Fin</th>
+                <td>{{ proyecto.fecha_fin|default:"No asignada" }}</td>
+            </tr>
+        </table>
+
+        <h3>Tareas asociadas:</h3>
+        {% if tareas %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo de Tarea</th>
+                        <th>Diseñador(es)</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Fecha de Inicio</th>
+                        <th>Fecha de Fin</th>
+                        <th>Horas Estimadas</th>
+                        <th>N° Graficos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tarea in tareas %}
+                        <tr>
+                            <td>{{ tarea.tipo_tarea }}</td>
+                            <td>
+                                {% for disenador in tarea.disenadores.all %}
+                                    {{ disenador.nombre }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>{{ tarea.descripcion }}</td>
+                            <td>{{ tarea.get_estado_display }}</td>
+                            <td>{{ tarea.fecha_inicio }}</td>
+                            <td>{{ tarea.fecha_fin }}</td>
+                            <td>{{ tarea.horas_estimadas }}</td>
+                            <td>{{ tarea.cantidad_graficos }}</td>
+                            <td>
+                                <a href="{% url 'detalle_tarea' tarea.id %}">Ver Tarea</a>
+
+                                
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No hay tareas asociadas a este proyecto.</p>
+        {% endif %}
+
+        <a href="{% url 'agregar_tarea' proyecto.id %}">Agregar tarea</a>
+    </div>
+{% endblock body %}

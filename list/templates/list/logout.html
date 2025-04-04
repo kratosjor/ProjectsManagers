@@ -1,0 +1,16 @@
+{% extends "template_base.html" %}
+
+{% block body %}
+
+
+    <div class="logout-container">
+        <h2>¿Estás seguro de que quieres cerrar sesión?</h2>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-submit">Cerrar sesión</button>
+        </form>
+        <p class="go-back-link">¿Te arrepientes? <a href="{% url 'home' %}">Volver a la página principal</a></p>
+    </div>
+
+
+{% endblock body %}

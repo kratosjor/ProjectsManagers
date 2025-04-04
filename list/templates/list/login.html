@@ -1,0 +1,27 @@
+{% extends "template_base.html" %}
+
+{% block body %}
+    <div class="login-container">
+        <h2>Iniciar Sesión</h2>
+        
+        {% if messages %}
+            <div class="alert-messages">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="btn-submit">Ingresar</button>
+        </form>
+
+        <p class="signup-link">¿No tienes una cuenta? <a href="{% url 'registro_usuario' %}">Regístrate aquí</a></p>
+    </div>
+
+{% endblock body %}

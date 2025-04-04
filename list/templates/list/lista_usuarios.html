@@ -1,0 +1,47 @@
+{% extends "template_base.html" %}
+
+
+{% block body %}
+
+{% if usuarios %}
+    <div class="main-content-lista">
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Supervisor</th>
+                    <th>Cargo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.nombre }}</td>
+                        <td>{{ usuario.correo }}</td>
+                        <td>{{ usuario.supervisor }}</td>
+                        <td>{{ usuario.cargo }}</td>
+                        <td>
+                            {% if request.user.cargo == 'ADMINISTRADOR' %}
+                                <a href="{% url 'editar_usuario' user_id=usuario.id %}" class="action-button">Editar</a>
+                            {% else %}
+                                <a href="#" class="action-button" onclick="alert('No tienes permisos para editar.');">Editar</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p>No hay usuarios registrados.</p>
+{% endif %}
+
+
+
+
+{% endblock body %}
+
