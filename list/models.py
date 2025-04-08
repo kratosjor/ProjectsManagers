@@ -2,7 +2,8 @@ from django.db import models
 from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
-
+from django.contrib.auth import get_user_model
+import re
 
 
 
@@ -77,6 +78,7 @@ class Disenador(AbstractUser):
 ##############################################################################################################
 
 
+
 class Tarea(models.Model):
     TIPO_TAREA = [
         ('2D FLOORPLAN', '2D Floorplan'),
@@ -113,71 +115,124 @@ class Tarea(models.Model):
     fecha_fin = models.DateField()
     cantidad_graficos = models.PositiveIntegerField(default=0)
     horas_estimadas = models.FloatField(null=True, blank=True)
-    horas_manuales = models.BooleanField(default=False)  # Casilla para calcular horas manuales
+    horas_manuales = models.BooleanField(default=False)
     horas_reales = models.PositiveIntegerField(null=True, blank=True)
     creador = models.ForeignKey(Disenador, on_delete=models.SET_NULL, null=True, blank=True, related_name='tareas_creadas')
 
     def calcular_horas_estimadas(self):
-        """
-        Calcula las horas estimadas en base al tipo de tarea.
-        """
-        estimado_por_tipo = self.ESTIMADO_TAREA.get(self.tipo_tarea, 0)  # Usar .get() para evitar KeyError
+        estimado_por_tipo = self.ESTIMADO_TAREA.get(self.tipo_tarea, 0)
         return estimado_por_tipo * self.cantidad_graficos if estimado_por_tipo else 0
 
-    def verificar_disponibilidad(self):
-        """
-        Verifica si los diseñadores asignados tienen suficiente disponibilidad.
-        """
-        horas_totales_disponibles = sum(disenador.disponibilidad for disenador in self.disenadores.all())
-        if horas_totales_disponibles < self.horas_estimadas:
-            raise ValueError("No hay suficiente disponibilidad de diseñadores.")
-        return True
+    def notificar_asignacion(self):
+        """ Notifica a los diseñadores recién asignados a la tarea. """
+        from .models import Notificacion
+        
+        for disenador in self.disenadores.all():
+            Notificacion.objects.create(
+                usuario=disenador,
+                tipo='TASK_ASSIGNED',
+                mensaje=f"Has sido asignado a la tarea '{self.tipo_tarea}' del proyecto '{self.proyecto.nombre}'",
+                relacion_con_tarea=self
+            )
+
+    def notificar_cambio_estado(self, estado_anterior):
+        """ Notifica sobre cambios de estado de la tarea. """
+        from .models import Notificacion
+        
+        if self.estado != estado_anterior:
+            for disenador in self.disenadores.all():
+                Notificacion.objects.create(
+                    usuario=disenador,
+                    tipo='TASK_STATUS_CHANGE',
+                    mensaje=f"El estado de la tarea '{self.tipo_tarea}' ha cambiado de {estado_anterior} a {self.estado}",
+                    relacion_con_tarea=self
+                )
+
+            if self.creador and self.estado in ['RECHAZADA', 'COMPLETADA']:
+                tipo_notificacion = 'TASK_REJECTED' if self.estado == 'RECHAZADA' else 'TASK_COMPLETED'
+                mensaje = (f"Tu tarea '{self.tipo_tarea}' ha sido rechazada" 
+                          if self.estado == 'RECHAZADA' 
+                          else f"Tu tarea '{self.tipo_tarea}' ha sido completada")
+                
+                Notificacion.objects.create(
+                    usuario=self.creador,
+                    tipo=tipo_notificacion,
+                    mensaje=mensaje,
+                    relacion_con_tarea=self
+                )
 
     def ajustar_disponibilidad(self):
-        """
-        Ajusta la disponibilidad de los diseñadores después de asignar la tarea.
-        """
-        horas_por_disenador = self.horas_estimadas / self.disenadores.count() if self.disenadores.count() > 0 else 0
+        """ Ajusta la disponibilidad de los diseñadores asignados restando las horas estimadas. """
         for disenador in self.disenadores.all():
-            disenador.disponibilidad -= horas_por_disenador
-            disenador.save()
+            if self.horas_estimadas and disenador.disponibilidad >= self.horas_estimadas:
+                disenador.disponibilidad -= self.horas_estimadas
+                disenador.save()
 
-    def revertir_disponibilidad(self):
-        """
-        Revierte las horas de disponibilidad de los diseñadores cuando la tarea se elimina.
-        """
-        horas_por_disenador = self.horas_estimadas / self.disenadores.count() if self.disenadores.count() > 0 else 0
-        for disenador in self.disenadores.all():
-            disenador.disponibilidad += horas_por_disenador
-            disenador.save()
+    def notificar_menciones(self):
+        """Busca menciones en la descripción y notifica a los usuarios mencionados, incluyendo a los Project Managers."""
+        from .models import Notificacion, Disenador
+        import re
+
+        menciones = re.findall(r'@(\w+)', self.descripcion)  # Busca @usuario en la descripción
+        usuarios_mencionados = Disenador.objects.filter(username__in=menciones)
+
+        # Notificar a los usuarios mencionados
+        for usuario in usuarios_mencionados:
+            Notificacion.objects.create(
+                usuario=usuario,
+                tipo='MENCION',
+                mensaje=f"Has sido mencionado en la tarea '{self.tipo_tarea}' del proyecto '{self.proyecto.nombre}'",
+                relacion_con_tarea=self
+            )
+        
+        # Obtener todos los Project Managers
+        project_managers = Disenador.objects.filter(cargo='PROJECT MANAGER')
+
+        # Enviar notificación a los Project Managers
+        for manager in project_managers:
+            Notificacion.objects.create(
+                usuario=manager,
+                tipo='MENCION',
+                mensaje=f"Has sido mencionado en la tarea '{self.tipo_tarea}' del proyecto '{self.proyecto.nombre}'",
+                relacion_con_tarea=self
+            )
 
     def save(self, *args, **kwargs):
-        # Verificar la disponibilidad antes de guardar
-        if self.id:  # Solo si es una tarea existente, comprobamos disponibilidad
-            tarea_original = Tarea.objects.get(id=self.id)
-            if tarea_original.disenadores != self.disenadores or tarea_original.cantidad_graficos != self.cantidad_graficos:
-                self.horas_estimadas = self.calcular_horas_estimadas()
-                self.verificar_disponibilidad()
+        estado_anterior = None
+        if self.id:
+            estado_anterior = Tarea.objects.get(id=self.id).estado
 
-        # Si es una nueva tarea, calculamos las horas estimadas
-        if not self.id:
-            self.horas_estimadas = self.calcular_horas_estimadas()
-        
-        # Guardar el objeto
         super().save(*args, **kwargs)
 
-        # Ajustar la disponibilidad de los diseñadores después de guardar
         self.ajustar_disponibilidad()
 
-    def delete(self, *args, **kwargs):
-        """
-        Revierte la disponibilidad de los diseñadores cuando la tarea es eliminada.
-        """
-        self.revertir_disponibilidad()
-        super().delete(*args, **kwargs)
+        if estado_anterior != self.estado:
+            self.notificar_cambio_estado(estado_anterior)
+
+        self.notificar_menciones()  # Asegurar que los mencionados reciban su notificación
+
+##############################################################################################
+
+####CLASS noticaaciobn
+
+
+class Notificacion(models.Model):
+    TIPO_CHOICES = [
+        ('TASK_ASSIGNED', 'Tarea asignada'),
+        ('TASK_STATUS_CHANGE', 'Cambio de estado de tarea'),
+        ('TASK_REJECTED', 'Tarea rechazada'),
+        ('TASK_COMPLETED', 'Tarea completada'),
+        ('MENCION', 'Mención'),
+    ]
+    
+    usuario = models.ForeignKey('Disenador', on_delete=models.CASCADE)
+    mensaje = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    leida = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.tipo_tarea} - {self.proyecto.nombre}"
+        return f"Notificación para {self.usuario.username}: {self.mensaje}"
 
 
 
@@ -185,15 +240,39 @@ class Tarea(models.Model):
 
 ####CLASS COMENTARIO
 
+
 class Comentario(models.Model):
-    usuario = models.ForeignKey(Disenador, on_delete=models.CASCADE)#user que comenta
-    contenido = models.TextField()
+    tarea = models.ForeignKey('Tarea', on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Disenador, on_delete=models.CASCADE)
+    contenido = models.TextField()  # El nombre correcto es "contenido"
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    proyecto = models.ForeignKey('Proyecto',on_delete=models.CASCADE, related_name='comentarios', null=True, blank=True)
-    tarea = models.ForeignKey('Tarea',on_delete=models.CASCADE, related_name='comentarios', null=True, blank=True)
-    menciones = models.ManyToManyField(Disenador, related_name='mencionado_en', blank=True)
-    
-    def detectar_menciones(self, *args, **kwargs):
-        super().save(*args, **kwargs)#guarda comentario primero
-        self.detectar_menciones() #detectar menciones despues
-    
+
+    def __str__(self):
+        return f"Comentario de {self.usuario.username} en la tarea {self.tarea.nombre}"
+
+
+    def crear_notificaciones(self):
+        # Filtramos los usuarios que recibirán la notificación
+        usuarios_relevantes = Disenador.objects.filter(cargo__in=["DISEÑADOR", "ADMINISTRADOR", "PROJECT MANAGER", "SUPERVISOR"])
+        # Excluimos al usuario que hizo el comentario
+        usuarios_relevantes = usuarios_relevantes.exclude(id=self.usuario.id)
+        # Excluimos a los diseñadores que no están asignados a la tarea
+        usuarios_relevantes = usuarios_relevantes.filter(tareas=self.tarea)
+        # Excluimos a los diseñadores que no están en el mismo proyecto
+        usuarios_relevantes = usuarios_relevantes.filter(proyectos=self.tarea.proyecto)
+       
+        for usuario in usuarios_relevantes:
+            # Crear una notificación para cada usuario relevante
+            if usuario != self.usuario:  # No enviamos notificación al que hace el comentario
+                Notificacion.objects.create(
+                    usuario=usuario,
+                    mensaje=f'Nuevo comentario en la tarea "{self.tarea.nombre}": {self.texto}',
+                    tipo='Comentario',
+                    leida=False
+                )
+
+
+
+        
+
+

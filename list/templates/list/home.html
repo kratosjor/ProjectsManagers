@@ -23,6 +23,13 @@
                         No hay diseñadores asignados.
                     {% endfor %}
                     <br>
+                    <strong>Creado por:</strong>
+                    {% if tarea.creador %}
+                        {{ tarea.creador.nombre }}
+                    {% else %}
+                        No hay un creador registrado para esta tarea.
+                    {% endif %}
+                    <br>
 
                     <!-- Formulario para cambiar el estado -->
                     <form method="post" action="{% url 'cambiar_estado_tarea' tarea.id %}">

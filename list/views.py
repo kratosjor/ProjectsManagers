@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
 import re
-
+from django.core.paginator import Paginator
 
 
 
@@ -67,6 +67,7 @@ def crear_proyecto(request):
     
     
     return render(request, 'list/crear_proyecto.html', {'form': form})
+
 
 ###################################
 
@@ -123,6 +124,14 @@ def agregar_tarea(request, proyecto_id):
                 tarea.delete()  # Elimina la tarea si excede el límite
                 return redirect('agregar_tarea', proyecto_id=proyecto_id)
 
+            # 🔹 Agregar notificaciones para los diseñadores asignados
+            for disenador in tarea.disenadores.all():
+                Notificacion.objects.create(
+                    usuario=disenador,  # Usamos el objeto disenador directamente, no 'disenador.usuario'
+                    mensaje=f"Se te ha asignado una nueva tarea: {tarea.tipo_tarea} en el proyecto {tarea.proyecto.nombre}",
+                    tipo='TAREA_ASIGNADA'
+                )
+
             return redirect('detalle_proyecto', proyecto_id=proyecto_id)
     else:
         form = TareaForm(proyecto=proyecto)
@@ -132,6 +141,7 @@ def agregar_tarea(request, proyecto_id):
         'proyecto': proyecto,
         'horas_estimadas_final': horas_estimadas_final
     })
+
 
 
 ###################################
@@ -432,28 +442,24 @@ def lista_usuarios(request):
 ###################################
 
 @login_required
-def agregar_comentario_tarea(request, proyect_id, tarea_id):
+def agregar_comentario_tarea(request, tarea_id):
+    tarea = Tarea.objects.get(id=tarea_id)
+
     if request.method == "POST":
-        tarea = get_object_or_404(Tarea, id=tarea_id)
-        contenido = request.POST.get("contenido", "").strip()
+        comentario_texto = request.POST.get('comentario')
+        comentario = Comentario.objects.create(
+            tarea=tarea,
+            usuario=request.user,
+            texto=comentario_texto
+        )
+        
+        # Llamamos al método para crear las notificaciones
+        comentario.crear_notificaciones()
 
-        if contenido:
-            comentario = Comentario.objects.create(
-                tarea=tarea,
-                usuario=request.user,  # Verifica que request.user es Disenador
-                contenido=contenido
-            )
-            
-
-            # Verificación para asegurarnos de que el usuario es una instancia de Disenador
-            usuario_nombre = comentario.usuario.nombre if hasattr(comentario.usuario, 'nombre') else comentario.usuario.username
-
-            return JsonResponse({
-                "usuario": usuario_nombre,  # Usamos el nombre en lugar de username
-                "contenido": comentario.contenido,
-                "fecha_creacion": comentario.fecha_creacion.strftime("%m-%d-%y %H:%M")
-            })
-    return JsonResponse({"error": "Solicitud inválida"}, status=400)
+        # Redirigir o devolver una respuesta exitosa
+        return redirect('detalle_tarea', tarea_id=tarea.id)
+    
+    return render(request, 'agregar_comentario.html', {'tarea': tarea})
     
 
 @login_required
@@ -530,3 +536,51 @@ def eliminar_comentario(request, comentario_id):
 def obtener_usuarios(request):
     usuarios = list(Disenador.objects.values_list('username', flat=True))
     return JsonResponse({"usuarios": usuarios})
+
+###################################
+
+# VISTA NOTIFICACIONES
+
+###################################
+
+
+@login_required
+def lista_notificaciones(request):
+    """Devuelve la lista de notificaciones del usuario autenticado"""
+    notificaciones = Notificacion.objects.filter(usuario=request.user).order_by('-fecha_creacion')
+
+    # Paginación (10 notificaciones por página)
+    paginator = Paginator(notificaciones, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Contar notificaciones no leídas
+    notificaciones_no_leidas = notificaciones.filter(leida=False).count()
+
+    data = {
+        "notificaciones": [
+            {
+                "id": n.id,
+                "tipo": n.get_tipo_display(),
+                "mensaje": n.mensaje,
+                "fecha": n.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S'),
+                "leida": n.leida
+            }
+            for n in page_obj
+        ],
+        "has_next": page_obj.has_next(),
+        "has_previous": page_obj.has_previous(),
+        "notificaciones_no_leidas": notificaciones_no_leidas
+    }
+
+    return JsonResponse(data)
+
+@login_required
+def marcar_notificacion_leida(request, notificacion_id):
+    notificacion = Notificacion.objects.get(id=notificacion_id, usuario=request.user)
+
+    if notificacion:
+        notificacion.leida = True
+        notificacion.save()
+
+    return JsonResponse({"success": True})

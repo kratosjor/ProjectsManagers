@@ -41,5 +41,9 @@ urlpatterns = [
     path('editar_usuario/<int:user_id>/', editar_usuario, name='editar_usuario'),
     
     path('lista_usuarios/', lista_usuarios, name='lista_usuarios'),
+    
+    
+    #NOTIFICACIONES
+    
 
 ]

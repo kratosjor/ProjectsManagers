@@ -1,0 +1,37 @@
+{% extends 'template_base.html' %}
+
+{% block title_page %}
+    <title>Notificaciones Leídas</title>
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="{% url 'home' %}">Task List</a>
+    </nav>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h2 class="text-center">Notificaciones Leídas</h2>
+
+    <ul class="list-group">
+        {% for notificacion in notificaciones %}
+            <li class="list-group-item {% if notificacion.leida %}list-group-item-success{% else %}list-group-item-warning{% endif %}">
+                <div>
+                    <strong>{{ notificacion.tipo }}</strong> - {{ notificacion.mensaje }}
+                    <br>
+                    <small>{{ notificacion.fecha_creacion }}</small>
+                </div>
+            </li>
+        {% empty %}
+            <li class="list-group-item">No tienes notificaciones leídas.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block footer %}
+    <footer class="footer">
+        <p>By Jordan Espinoza 2025</p>
+    </footer>
+{% endblock %}
